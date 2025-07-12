@@ -1,25 +1,36 @@
-import { getAllContacts, getContactById } from '../services/contacts.js';
+const contactsService = require("../services/contacts");
+const createError = require("http-errors");
 
-export const getAllContactsController = async (req, res) => {
-  const contacts = await getAllContacts();
-  res.status(200).json({
-    status: 200,
-    message: 'Successfully found contacts!',
-    data: contacts,
-  });
+const getAllContacts = async (req, res) => {
+  const contacts = await contactsService.listContacts();
+  res.status(200).json({ status: 200, message: "Contacts fetched", data: contacts });
 };
 
-export const getContactByIdController = async (req, res) => {
-  const { contactId } = req.params;
-  const contact = await getContactById(contactId);
+const getContactById = async (req, res) => {
+  const contact = await contactsService.getContactById(req.params.contactId);
+  if (!contact) throw createError(404, "Contact not found");
+  res.status(200).json({ status: 200, message: "Contact fetched", data: contact });
+};
 
-  if (!contact) {
-    return res.status(404).json({ message: 'Contact not found' });
+const createContact = async (req, res) => {
+  const { name, phoneNumber, email, isFavourite, contactType } = req.body;
+  if (!name || !phoneNumber || !contactType) {
+    throw createError(400, "Missing required fields");
   }
-
-  res.status(200).json({
-    status: 200,
-    message: `Successfully found contact with id ${contactId}!`,
-    data: contact,
-  });
+  const newContact = await contactsService.addContact({ name, phoneNumber, email, isFavourite, contactType });
+  res.status(201).json({ status: 201, message: "Successfully created a contact!", data: newContact });
 };
+
+const updateContact = async (req, res) => {
+  const contact = await contactsService.updateContact(req.params.contactId, req.body);
+  if (!contact) throw createError(404, "Contact not found");
+  res.status(200).json({ status: 200, message: "Successfully patched a contact!", data: contact });
+};
+
+const deleteContact = async (req, res) => {
+  const contact = await contactsService.removeContact(req.params.contactId);
+  if (!contact) throw createError(404, "Contact not found");
+  res.status(204).send();
+};
+
+module.exports = { getAllContacts, getContactById, createContact, updateContact, deleteContact };
