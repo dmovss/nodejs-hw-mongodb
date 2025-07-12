@@ -1,12 +1,8 @@
-import express from 'express';
-import {
-  getAllContactsController,
-  getContactByIdController,
-} from '../controllers/contactsController.js';
-
+const express = require('express');
 const router = express.Router();
+const ctrlWrapper = require('../utils/ctrlWrapper');
+const contactsCtrl = require('../controllers/contacts');
 
-router.get('/', getAllContactsController);
-router.get('/:contactId', getContactByIdController);
+router.post('/', ctrlWrapper(contactsCtrl.createContact));
 
-export default router;
+module.exports = router;

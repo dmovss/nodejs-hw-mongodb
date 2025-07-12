@@ -1,10 +1,7 @@
-const errorHandler = (err, req, res, next) => {
-  console.error(err);
+module.exports = (err, req, res, next) => {
   res.status(err.status || 500).json({
     status: err.status || 500,
-    message: "Something went wrong",
-    data: err.message,
+    message: err.message || "Something went wrong",
+    data: err.data || null
   });
 };
-
-module.exports = errorHandler;
