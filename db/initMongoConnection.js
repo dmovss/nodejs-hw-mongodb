@@ -1,19 +1,15 @@
-import mongoose from 'mongoose';
-import { getEnvVar } from '../utils/getEnvVar.js';
+import mongoose from "mongoose";
+import { getEnvVar } from "../utils/getEnvVar.js";
 
 export const initMongoConnection = async () => {
-  try {
-    const user = getEnvVar('MONGODB_USER');
-    const pwd = getEnvVar('MONGODB_PASSWORD');
-    const url = getEnvVar('MONGODB_URL');
-    const db = getEnvVar('MONGODB_DB');
+  // Використовуємо один параметр MONGODB_URL замість чотирьох
+  const connectionString = getEnvVar("MONGODB_URL");
 
-    await mongoose.connect(
-      `mongodb+srv://${user}:${pwd}@${url}/${db}?retryWrites=true&w=majority`,
-    );
-    console.log('Mongo connection successfully established!');
-  } catch (e) {
-    console.log('Error while setting up mongo connection', e);
-    throw e;
+  try {
+    await mongoose.connect(connectionString);
+    console.log("Mongo connection successfully established!");
+  } catch (error) {
+    console.error("Error while setting up mongo connection", error);
+    throw error;
   }
 };
