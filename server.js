@@ -33,3 +33,5 @@ export const setupServer = () => {
     console.log(`Server is running on port ${PORT}`);
   });
 };
+// Додайте цей рядок в кінець файлу:
+export default app;
