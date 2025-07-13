@@ -1,35 +1,33 @@
-import express from 'express';
-import pino from 'pino-http';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
+import contactsRouter from "./routers/contacts.js";
+import notFoundHandler from "./middlewares/notFoundHandler.js";
+import errorHandler from "./middlewares/errorHandler.js";
 
-import contactsRouter from './routers/contacts.js';
+const app = express();
 
-import { getEnvVar } from './utils/getEnvVar.js';
-import { notFoundHandler } from './middlewares/notFoundHandler.js';
-import { errorHandler } from './middlewares/errorHandler.js';
+app.use(cors());
+app.use(express.json());
 
-const PORT = Number(getEnvVar('PORT', '3000'));
-
-export const setupServer = () => {
-  const app = express();
-
-  app.use(express.json());
-  app.use(cors());
-  app.use(
-    pino({
-      transport: {
-        target: 'pino-pretty',
-      },
-    })
-  );
-
-  app.use(contactsRouter);
-
-  app.use(notFoundHandler);
-
-  app.use(errorHandler);
-
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// Корневой маршрут для проверки работы
+app.get("/", (req, res) => {
+  res.json({
+    message: "Contacts API is running!",
+    endpoints: {
+      getContacts: "GET /api/contacts",
+      createContact: "POST /api/contacts",
+      getContact: "GET /api/contacts/:id",
+      updateContact: "PATCH /api/contacts/:id",
+      deleteContact: "DELETE /api/contacts/:id"
+    }
   });
-};
+});
+
+// Маршруты API
+app.use("/api/contacts", contactsRouter);
+
+// Обработчики ошибок
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+export default app;

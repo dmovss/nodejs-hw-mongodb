@@ -1,5 +1,15 @@
 import { contactsCollection } from "../db/models/contact.js";
-
+// В метод getContacts добавьте тестовые данные:
+const getContacts = async () => {
+  return [
+    {
+      id: "1",
+      name: "Test Contact",
+      phoneNumber: "1234567890",
+      contactType: "work"
+    }
+  ];
+};
 export const getAllContacts = async () => {
   const contacts = await contactsCollection.find();
   return contacts;
