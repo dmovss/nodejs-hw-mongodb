@@ -1,18 +1,9 @@
-import { HttpError } from 'http-errors';
-
-export const errorHandler = (err, req, res, next) => {
-  if (err instanceof HttpError) {
-    res.status(err.status).json({
-      status: err.status,
-      message: err.name,
-      data: err,
-    });
-    return;
-  }
-
+const errorHandler = (err, req, res, next) => {
   res.status(500).json({
     status: 500,
-    message: 'Something went wrong',
-    data: err.message,
+    message: "Something went wrong",
+    data: err.message
   });
 };
+
+export default errorHandler; // Изменено на default export
