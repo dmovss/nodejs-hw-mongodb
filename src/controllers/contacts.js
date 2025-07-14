@@ -67,3 +67,15 @@ export const deleteContactController = async (req, res) => {
 
   res.status(204).send();
 };
+
+const getContacts = async (req, res) => {
+  
+  res.json([
+    {
+      id: "1",
+      name: "Test Contact",
+      phoneNumber: "1234567890",
+      contactType: "work"
+    }
+  ]);
+}
