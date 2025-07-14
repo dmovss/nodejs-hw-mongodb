@@ -21,8 +21,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use("/contacts", contactsRouter);
-
+app.use("/api/contacts", contactsRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
