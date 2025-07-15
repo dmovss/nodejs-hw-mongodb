@@ -1,14 +1,50 @@
 import Contact from "../models/Contact.js";
-export const getContacts = async (req, res) => {
-  const contacts = await Contact.find();
+
+// Получение всех контактов с пагинацией и сортировкой
+const getContacts = async (req, res) => {
+  const {
+    page = 1,
+    perPage = 10,
+    sortBy = 'name',
+    sortOrder = 'asc',
+    type,
+    isFavourite
+  } = req.query;
+
+  const skip = (page - 1) * perPage;
+  const sortOptions = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+  const filter = {};
+  if (type) filter.contactType = type;
+  if (isFavourite) filter.isFavourite = isFavourite === 'true';
+
+  const [contacts, total] = await Promise.all([
+    Contact.find(filter)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(perPage),
+    Contact.countDocuments(filter)
+  ]);
+
+  const totalPages = Math.ceil(total / perPage);
+
   res.json({
     status: 200,
-    message: "Successfully fetched contacts!",
-    data: contacts
+    message: "Successfully found contacts!",
+    data: {
+      data: contacts,
+      page: Number(page),
+      perPage: Number(perPage),
+      totalItems: total,
+      totalPages,
+      hasPreviousPage: page > 1,
+      hasNextPage: page < totalPages,
+    }
   });
 };
 
-export const getContactById = async (req, res, next) => {
+// Получение контакта по ID
+const getContactById = async (req, res) => {
   const { id } = req.params;
   const contact = await Contact.findById(id);
 
@@ -26,7 +62,8 @@ export const getContactById = async (req, res, next) => {
   });
 };
 
-export const createContact = async (req, res) => {
+// Создание нового контакта
+const createContact = async (req, res) => {
   const newContact = await Contact.create(req.body);
   res.status(201).json({
     status: 201,
@@ -35,7 +72,8 @@ export const createContact = async (req, res) => {
   });
 };
 
-export const updateContact = async (req, res) => {
+// Обновление контакта
+const updateContact = async (req, res) => {
   const { id } = req.params;
   const updatedContact = await Contact.findByIdAndUpdate(id, req.body, { new: true });
 
@@ -53,25 +91,8 @@ export const updateContact = async (req, res) => {
   });
 };
 
-export const patchContact = async (req, res) => {
-  const { id } = req.params;
-  const patchedContact = await Contact.findByIdAndUpdate(id, req.body, { new: true });
-
-  if (!patchedContact) {
-    return res.status(404).json({
-      status: 404,
-      message: "Contact not found"
-    });
-  }
-
-  res.json({
-    status: 200,
-    message: "Successfully patched contact!",
-    data: patchedContact
-  });
-};
-
-export const deleteContact = async (req, res) => {
+// Удаление контакта
+const deleteContact = async (req, res) => {
   const { id } = req.params;
   const deletedContact = await Contact.findByIdAndDelete(id);
 
@@ -90,6 +111,5 @@ export default {
   getContactById,
   createContact,
   updateContact,
-  patchContact,
   deleteContact
 };
