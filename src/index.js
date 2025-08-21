@@ -1,40 +1,41 @@
-import 'dotenv/config';
 import express from 'express';
+import mongoose from 'mongoose';
 import cors from 'cors';
-import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
-import createHttpError from 'http-errors';
-import { connectDB } from './lib/db.js';
-import authRouter from './routers/auth.js';
 import contactsRouter from './routers/contacts.js';
+import authRouter from './routers/auth.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000';
-app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
-app.use(morgan('dev'));
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser());
 
+app.use('/api/contacts', contactsRouter);
 app.use('/auth', authRouter);
-app.use('/contacts', contactsRouter);
 
-app.use((req, res, next) => {
-  next(createHttpError(404, 'Not Found'));
-});
+app.use(errorHandler);
 
-app.use((err, req, res, next) => {
-  const status = err.status || err.statusCode || 500;
-  res.status(status).json({
-    status,
-    message: err.message || 'Server error',
-  });
-});
+const startServer = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Database connection successful');
 
-const PORT = process.env.PORT || 3000;
+    app.listen(process.env.PORT, () => {
+      console.log(`Server is running on port ${process.env.PORT}`);
+    });
+  } catch (error) {
+    console.error('Error starting server:', error);
+    process.exit(1);
+  }
+};
 
-await connectDB();
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+startServer();
