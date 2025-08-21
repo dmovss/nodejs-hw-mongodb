@@ -1,6 +1,5 @@
 import Contact from "../models/Contact.js";
 
-// Получение всех контактов с пагинацией и сортировкой
 const getContacts = async (req, res) => {
   const {
     page = 1,

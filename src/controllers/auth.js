@@ -1,54 +1,84 @@
-import * as authService from "../services/auth.js";
+import {
+  registerUser,
+  loginUser,
+  refreshSession,
+  logoutSession,
+} from '../services/auth.js';
+
+const isProd = process.env.NODE_ENV === 'production';
+
+const cookieOpts = (expires) => ({
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? 'none' : 'lax',
+  expires,
+  path: '/',
+});
 
 export const register = async (req, res, next) => {
   try {
-    const data = await authService.registerUser(req.body);
+    const user = await registerUser(req.body);
     res.status(201).json({
       status: 201,
-      message: "Successfully registered a user!",
-      data,
+      message: 'Successfully registered a user!',
+      data: user,
     });
-  } catch (err) {
-    next(err);
+  } catch (e) {
+    next(e);
   }
 };
 
 export const login = async (req, res, next) => {
   try {
-    const { accessToken, refreshToken } = await authService.loginUser(req.body);
-    res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true });
-    res.json({
-      status: 200,
-      message: "Successfully logged in an user!",
-      data: { accessToken },
-    });
-  } catch (err) {
-    next(err);
+    const { session, tokens } = await loginUser(req.body);
+
+    res
+      .cookie('refreshToken', tokens.refreshToken, cookieOpts(tokens.refreshTokenValidUntil))
+      .cookie('sid', String(session._id), cookieOpts(tokens.refreshTokenValidUntil))
+      .status(200)
+      .json({
+        status: 200,
+        message: 'Successfully logged in an user!',
+        data: { accessToken: tokens.accessToken },
+      });
+  } catch (e) {
+    next(e);
   }
 };
 
 export const refresh = async (req, res, next) => {
   try {
-    const { accessToken, refreshToken } = await authService.refreshSession(
-      req.cookies.refreshToken
-    );
-    res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true });
-    res.json({
-      status: 200,
-      message: "Successfully refreshed a session!",
-      data: { accessToken },
+    const { refreshToken, sid } = req.cookies;
+    const { newSession, tokens } = await refreshSession({
+      refreshToken,
+      sessionId: sid,
     });
-  } catch (err) {
-    next(err);
+
+    res
+      .cookie('refreshToken', tokens.refreshToken, cookieOpts(tokens.refreshTokenValidUntil))
+      .cookie('sid', String(newSession._id), cookieOpts(tokens.refreshTokenValidUntil))
+      .status(200)
+      .json({
+        status: 200,
+        message: 'Successfully refreshed a session!',
+        data: { accessToken: tokens.accessToken },
+      });
+  } catch (e) {
+    next(e);
   }
 };
 
 export const logout = async (req, res, next) => {
   try {
-    await authService.logoutUser(req.user.id);
-    res.clearCookie("refreshToken");
-    res.status(204).end();
-  } catch (err) {
-    next(err);
+    const { refreshToken, sid } = req.cookies;
+    await logoutSession({ refreshToken, sessionId: sid });
+
+    res
+      .clearCookie('refreshToken', { path: '/' })
+      .clearCookie('sid', { path: '/' })
+      .status(204)
+      .send();
+  } catch (e) {
+    next(e);
   }
 };

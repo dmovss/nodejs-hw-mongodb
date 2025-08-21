@@ -6,16 +6,23 @@ import {
   createContactSchema,
   updateContactSchema,
   updateFavoriteSchema,
-} from '../validation/contactSchemas.js';
-import ctrl from '../controllers/contactsController.js';
+} from '../validation/contactSchemas.js'; // Исправленный путь
+import {
+  getAllContacts,
+  getContactById,
+  addContact,
+  deleteContact,
+  updateContact,
+  updateStatusContact,
+} from '../controllers/contactsController.js';
 
 const router = express.Router();
 
-router.get('/', authenticate, ctrl.getAllContacts);
-router.get('/:id', authenticate, isValidId, ctrl.getContactById);
-router.post('/', authenticate, validateBody(createContactSchema), ctrl.addContact);
-router.delete('/:id', authenticate, isValidId, ctrl.deleteContact);
-router.put('/:id', authenticate, isValidId, validateBody(updateContactSchema), ctrl.updateContact);
-router.patch('/:id/favorite', authenticate, isValidId, validateBody(updateFavoriteSchema), ctrl.updateStatusContact);
+router.get('/', authenticate, getAllContacts);
+router.get('/:id', authenticate, isValidId, getContactById);
+router.post('/', authenticate, validateBody(createContactSchema), addContact);
+router.delete('/:id', authenticate, isValidId, deleteContact);
+router.put('/:id', authenticate, isValidId, validateBody(updateContactSchema), updateContact);
+router.patch('/:id/favorite', authenticate, isValidId, validateBody(updateFavoriteSchema), updateStatusContact);
 
 export default router;

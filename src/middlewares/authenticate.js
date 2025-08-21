@@ -1,29 +1,46 @@
-import jwt from "jsonwebtoken";
-import createHttpError from "http-errors";
-import { User } from "../models/user.js";
-
-const ACCESS_SECRET = process.env.ACCESS_SECRET;
+import jwt from 'jsonwebtoken';
+import { createHttpError } from 'http-errors';
+import Session from '../models/session.js';
 
 export const authenticate = async (req, res, next) => {
   try {
-    const header = req.headers.authorization || "";
-    const [type, token] = header.split(" ");
-
-    if (type !== "Bearer" || !token) {
-      throw createHttpError(401, "Not authorized");
+    const authHeader = req.get('Authorization');
+    if (!authHeader) {
+      throw createHttpError(401, 'Authorization header is missing');
     }
 
-    const payload = jwt.verify(token, ACCESS_SECRET);
-    const user = await User.findById(payload.id);
+    const [bearer, token] = authHeader.split(' ');
+    if (bearer !== 'Bearer' || !token) {
+      throw createHttpError(401, 'Invalid authorization header format');
+    }
 
-    if (!user) throw createHttpError(401, "Not authorized");
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        throw createHttpError(401, 'Access token expired');
+      }
+      throw createHttpError(401, 'Invalid access token');
+    }
 
-    req.user = user;
+    const session = await Session.findOne({
+      accessToken: token,
+      accessTokenValidUntil: { $gt: new Date() },
+    }).populate('userId');
+
+    if (!session) {
+      throw createHttpError(401, 'Invalid session');
+    }
+
+    req.user = {
+      _id: session.userId._id,
+      name: session.userId.name,
+      email: session.userId.email,
+    };
+
     next();
-  } catch (err) {
-    if (err.name === "TokenExpiredError") {
-      return next(createHttpError(401, "Access token expired"));
-    }
-    next(err);
+  } catch (error) {
+    next(error);
   }
 };

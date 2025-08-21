@@ -2,21 +2,29 @@
   "name": "nodejs-hw-mongodb",
   "version": "1.0.0",
   "type": "module",
+  "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "lint": "eslint ."
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
-    "express": "^5.1.0",
+    "express": "^4.21.2",
     "http-errors": "^2.0.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.16.3",
-    "pino-http": "^10.5.0"
+    "mongoose": "^8.17.2",
+    "morgan": "^1.10.1"
   },
   "devDependencies": {
+    "eslint": "^8.57.1",
     "nodemon": "^3.1.10"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
