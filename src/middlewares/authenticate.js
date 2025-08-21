@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { createHttpError } from 'http-errors';
+import createHttpError from 'http-errors';
 import Session from '../models/session.js';
 
 export const authenticate = async (req, res, next) => {
@@ -14,6 +14,7 @@ export const authenticate = async (req, res, next) => {
       throw createHttpError(401, 'Invalid authorization header format');
     }
 
+    // Verify token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
@@ -24,6 +25,7 @@ export const authenticate = async (req, res, next) => {
       throw createHttpError(401, 'Invalid access token');
     }
 
+    // Check session
     const session = await Session.findOne({
       accessToken: token,
       accessTokenValidUntil: { $gt: new Date() },
