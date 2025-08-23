@@ -1,10 +1,10 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import User from '../models/user.js';
-import Session from '../models/session.js';
+import User from '../models/User.js';
+import Session from '../models/Session.js';
 import createHttpError from 'http-errors';
 
-export const register = async userData => {
+export const register = async (userData) => {
   const { email, password } = userData;
 
   const existingUser = await User.findOne({ email });
@@ -33,8 +33,10 @@ export const login = async (email, password) => {
     throw createHttpError(401, 'Email or password is wrong');
   }
 
+  // Delete existing sessions
   await Session.deleteMany({ userId: user._id });
 
+  // Generate tokens
   const accessToken = jwt.sign(
     { userId: user._id },
     process.env.JWT_ACCESS_SECRET,
@@ -47,12 +49,13 @@ export const login = async (email, password) => {
     { expiresIn: '30d' }
   );
 
+  // Create session
   const session = await Session.create({
     userId: user._id,
     accessToken,
     refreshToken,
-    accessTokenValidUntil: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
-    refreshTokenValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    accessTokenValidUntil: new Date(Date.now() + 15 * 60 * 1000),
+    refreshTokenValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   });
 
   return {
@@ -67,14 +70,16 @@ export const login = async (email, password) => {
   };
 };
 
-export const refreshSession = async refreshToken => {
+export const refreshSession = async (refreshToken) => {
   if (!refreshToken) {
     throw createHttpError(401, 'Refresh token not provided');
   }
 
   try {
+    // Verify refresh token
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
+    // Find session
     const session = await Session.findOne({
       refreshToken,
       refreshTokenValidUntil: { $gt: new Date() },
@@ -84,8 +89,10 @@ export const refreshSession = async refreshToken => {
       throw createHttpError(401, 'Invalid refresh token');
     }
 
+    // Delete old session
     await Session.findByIdAndDelete(session._id);
 
+    // Generate new tokens
     const newAccessToken = jwt.sign(
       { userId: session.userId._id },
       process.env.JWT_ACCESS_SECRET,
@@ -98,6 +105,7 @@ export const refreshSession = async refreshToken => {
       { expiresIn: '30d' }
     );
 
+    // Create new session
     const newSession = await Session.create({
       userId: session.userId._id,
       accessToken: newAccessToken,
@@ -121,6 +129,6 @@ export const refreshSession = async refreshToken => {
   }
 };
 
-export const logout = async sessionId => {
+export const logout = async (sessionId) => {
   await Session.findByIdAndDelete(sessionId);
 };

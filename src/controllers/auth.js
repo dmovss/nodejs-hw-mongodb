@@ -1,6 +1,6 @@
 import * as authService from '../services/auth.js';
 import createHttpError from 'http-errors';
-import Session from '../models/session.js';
+import Session from '../models/Session.js';
 
 export const register = async (req, res, next) => {
   try {
