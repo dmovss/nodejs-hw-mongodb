@@ -6,7 +6,7 @@ import {
   createContactSchema,
   updateContactSchema,
   updateFavoriteSchema,
-} from '../validation/contactSchemas.js'; // Исправленный путь
+} from '../validation/contactSchemas.js'; 
 import {
   getAllContacts,
   getContactById,
