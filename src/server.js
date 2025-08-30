@@ -15,6 +15,29 @@ export const startServer = () => {
   app.use(express.json());
   app.use(cookieParser());
 
+  app.get('/', (req, res) => {
+    res.json({
+      message: 'Contacts API is running!',
+      version: '1.0.0',
+      endpoints: {
+        auth: {
+          register: 'POST /auth/register',
+          login: 'POST /auth/login',
+          refresh: 'POST /auth/refresh',
+          logout: 'POST /auth/logout'
+        },
+        contacts: {
+          getAll: 'GET /api/contacts',
+          getById: 'GET /api/contacts/:id',
+          create: 'POST /api/contacts',
+          update: 'PUT /api/contacts/:id',
+          updateStatus: 'PATCH /api/contacts/:id/favorite',
+          delete: 'DELETE /api/contacts/:id'
+        }
+      }
+    });
+  });
+
   app.use('/api/contacts', contactsRouter);
   app.use('/auth', authRouter);
 
