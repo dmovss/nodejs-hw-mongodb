@@ -4,7 +4,13 @@ import createHttpError from 'http-errors';
 export const getAllContacts = async (req, res, next) => {
   try {
     const contacts = await Contact.find({ userId: req.user._id });
-    res.json(contacts);
+    res.json({
+      status: 'success',
+      code: 200,
+      data: {
+        contacts,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -21,7 +27,13 @@ export const getContactById = async (req, res, next) => {
       throw createHttpError(404, 'Contact not found');
     }
 
-    res.json(contact);
+    res.json({
+      status: 'success',
+      code: 200,
+      data: {
+        contact,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -34,7 +46,13 @@ export const addContact = async (req, res, next) => {
       userId: req.user._id,
     });
 
-    res.status(201).json(newContact);
+    res.status(201).json({
+      status: 'success',
+      code: 201,
+      data: {
+        contact: newContact,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -51,7 +69,11 @@ export const deleteContact = async (req, res, next) => {
       throw createHttpError(404, 'Contact not found');
     }
 
-    res.status(200).json({ message: 'Contact deleted' });
+    res.json({
+      status: 'success',
+      code: 200,
+      message: 'Contact deleted',
+    });
   } catch (error) {
     next(error);
   }
@@ -65,14 +87,20 @@ export const updateContact = async (req, res, next) => {
         userId: req.user._id,
       },
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!contact) {
       throw createHttpError(404, 'Contact not found');
     }
 
-    res.json(contact);
+    res.json({
+      status: 'success',
+      code: 200,
+      data: {
+        contact,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -86,14 +114,20 @@ export const updateStatusContact = async (req, res, next) => {
         userId: req.user._id,
       },
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!contact) {
       throw createHttpError(404, 'Contact not found');
     }
 
-    res.json(contact);
+    res.json({
+      status: 'success',
+      code: 200,
+      data: {
+        contact,
+      },
+    });
   } catch (error) {
     next(error);
   }

@@ -1,20 +1,11 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export const initMongoConnection = async () => {
-  const {
-    MONGODB_USER,
-    MONGODB_PASSWORD,
-    MONGODB_DB,
-    MONGODB_HOST
-  } = process.env;
-
-  const connectionString = `mongodb+srv://${MONGODB_USER}:${MONGODB_PASSWORD}@${MONGODB_HOST}/${MONGODB_DB}?retryWrites=true&w=majority`;
-
   try {
-    await mongoose.connect(connectionString);
-    console.log("Mongo connection successfully established!");
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Database connection successful');
   } catch (error) {
-    console.error("Error while setting up mongo connection", error);
-    throw error;
+    console.error('Error connecting to database:', error);
+    process.exit(1);
   }
 };

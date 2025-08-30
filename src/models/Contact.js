@@ -9,6 +9,12 @@ const contactSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, 'Set email for contact'],
+      validate: {
+        validator: function(v) {
+          return /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(v);
+        },
+        message: props => `${props.value} is not a valid email!`
+      }
     },
     phone: {
       type: String,

@@ -6,12 +6,12 @@ const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.get('Authorization');
     if (!authHeader) {
-      throw createHttpError(401, 'Authorization header is missing');
+      return next(createHttpError(401, 'Authorization header is missing'));
     }
 
     const [bearer, token] = authHeader.split(' ');
     if (bearer !== 'Bearer' || !token) {
-      throw createHttpError(401, 'Invalid authorization header format');
+      return next(createHttpError(401, 'Invalid authorization header format'));
     }
 
     let decoded;
@@ -19,9 +19,9 @@ const authenticate = async (req, res, next) => {
       decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
-        throw createHttpError(401, 'Access token expired');
+        return next(createHttpError(401, 'Access token expired'));
       }
-      throw createHttpError(401, 'Invalid access token');
+      return next(createHttpError(401, 'Invalid access token'));
     }
 
     const session = await Session.findOne({
@@ -30,7 +30,7 @@ const authenticate = async (req, res, next) => {
     }).populate('userId');
 
     if (!session) {
-      throw createHttpError(401, 'Invalid session');
+      return next(createHttpError(401, 'Invalid session'));
     }
 
     req.user = {
