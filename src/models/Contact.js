@@ -1,39 +1,30 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
-const contactSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: [true, 'Set name for contact'],
-    },
-    email: {
-      type: String,
-      required: [true, 'Set email for contact'],
-      validate: {
-        validator: function(v) {
-          return /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(v);
-        },
-        message: props => `${props.value} is not a valid email!`
-      }
-    },
-    phone: {
-      type: String,
-      required: [true, 'Set phone for contact'],
-    },
-    favorite: {
-      type: Boolean,
-      default: false,
-    },
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
+const contactSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Set name for contact'],
   },
-  {
-    timestamps: true,
-    versionKey: false,
+  email: {
+    type: String,
+  },
+  phone: {
+    type: String,
+  },
+  favorite: {
+    type: Boolean,
+    default: false,
+  },
+  photo: {
+    type: String,
+    default: null,
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
   }
-);
+}, { versionKey: false });
 
-export default mongoose.model('Contact', contactSchema);
+const Contact = mongoose.model('Contact', contactSchema);
+
+module.exports = Contact;
