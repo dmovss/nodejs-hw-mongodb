@@ -1,51 +1,31 @@
-import express from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import contactsRouter from './routers/contacts.js';
-import authRouter from './routers/auth.js';
-import { errorHandler } from './middlewares/errorHandler.js';
+const mongoose = require('mongoose');
+const app = require('./app');
+const { connectMongo } = require('./db/connection');
+const cloudinary = require('cloudinary').v2;
 
-export const startServer = () => {
-  const app = express();
+const PORT = process.env.PORT || 3000;
 
-  app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-    credentials: true,
-  }));
-  app.use(express.json());
-  app.use(cookieParser());
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-  app.get('/', (req, res) => {
-    res.json({
-      message: 'Contacts API is running!',
-      version: '1.0.0',
-      endpoints: {
-        auth: {
-          register: 'POST /auth/register',
-          login: 'POST /auth/login',
-          refresh: 'POST /auth/refresh',
-          logout: 'POST /auth/logout'
-        },
-        contacts: {
-          getAll: 'GET /api/contacts',
-          getById: 'GET /api/contacts/:id',
-          create: 'POST /api/contacts',
-          update: 'PUT /api/contacts/:id',
-          updateStatus: 'PATCH /api/contacts/:id/favorite',
-          delete: 'DELETE /api/contacts/:id'
-        }
+const start = async () => {
+  try {
+    await connectMongo();
+    console.log('Database connection successful');
+
+    app.listen(PORT, (err) => {
+      if (err) {
+        console.error('Error at server launch:', err);
       }
+      console.log(`Server running. Use our API on port: ${PORT}`);
     });
-  });
-
-  app.use('/api/contacts', contactsRouter);
-  app.use('/auth', authRouter);
-
-  app.use(errorHandler);
-
-  const port = process.env.PORT || 3000;
-
-  return app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
+  } catch (err) {
+    console.error(`Failed to launch application with error: ${err.message}`);
+    process.exit(1);
+  }
 };
+
+start();

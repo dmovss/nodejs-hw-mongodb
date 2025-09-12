@@ -5,34 +5,34 @@ const { contactSchemas } = require('../../schemas');
 
 const router = express.Router();
 
-router.get('/', authenticate, ctrl.getAllContacts);
-router.get('/:contactId', authenticate, ctrl.getContactById);
+router.get('/', authenticate, ctrl.getAll);
+router.get('/:contactId', authenticate, ctrl.getById);
 router.post(
   '/',
   authenticate,
   upload.single('photo'),
   validateBody(contactSchemas.addSchema),
-  ctrl.addContact
+  ctrl.add
 );
 router.put(
   '/:contactId',
   authenticate,
   validateBody(contactSchemas.addSchema),
-  ctrl.updateContact
+  ctrl.update
 );
 router.patch(
   '/:contactId',
   authenticate,
   upload.single('photo'),
   validateBody(contactSchemas.updateSchema),
-  ctrl.updateContact
+  ctrl.update
 );
-router.delete('/:contactId', authenticate, ctrl.deleteContact);
+router.delete('/:contactId', authenticate, ctrl.remove);
 router.patch(
   '/:contactId/favorite',
   authenticate,
   validateBody(contactSchemas.updateFavoriteSchema),
-  ctrl.updateStatusContact
+  ctrl.updateStatus
 );
 
 module.exports = router;
