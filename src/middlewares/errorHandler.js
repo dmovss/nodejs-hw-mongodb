@@ -1,27 +1,17 @@
-const errorHandler = (err, req, res, next) => {
-  let status = err.status || 500;
-  let message = err.message || 'Internal Server Error';
+import { HttpError } from 'http-errors';
 
-  if (err.name === 'ValidationError') {
-    status = 400;
-    message = Object.values(err.errors).map(val => val.message).join(', ');
+export const errorHandler = (err, req, res, next) => {
+  if (err instanceof HttpError) {
+    res.status(err.status).json({
+      status: err.status,
+      message: err.name,
+      data: err,
+    });
+    return;
   }
 
-  if (err.code === 11000) {
-    status = 409;
-    message = 'Duplicate field value entered';
-  }
-
-  if (err.name === 'CastError') {
-    status = 400;
-    message = 'Invalid ID format';
-  }
-
-  res.status(status).json({
-    status: 'error',
-    code: status,
-    message,
+  res.status(500).json({
+    message: 'Something went wrong',
+    error: err.message,
   });
 };
-
-export { errorHandler };

@@ -1,31 +1,47 @@
-const mongoose = require('mongoose');
-const app = require('./app');
-const { connectMongo } = require('./db/connection');
-const cloudinary = require('cloudinary').v2;
+import express from 'express';
+import pino from 'pino-http';
+import cors from 'cors';
 
-const PORT = process.env.PORT || 3000;
+import { getEnvVar } from './utils/getEnvVar.js';
+import { errorHandler } from './middlewares/errorHandler.js';
+import { notFoundHandler } from './middlewares/notFoundHandler.js';
+import cookieParser from 'cookie-parser';
+import router from './routers/index.js';
+import { UPLOAD_DIR } from './constants/index.js';
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const PORT = Number(getEnvVar('PORT', '3000'));
 
-const start = async () => {
-  try {
-    await connectMongo();
-    console.log('Database connection successful');
+export const setupServer = () => {
+  const app = express();
 
-    app.listen(PORT, (err) => {
-      if (err) {
-        console.error('Error at server launch:', err);
-      }
-      console.log(`Server running. Use our API on port: ${PORT}`);
+  app.use(express.json());
+  app.use(cors());
+  app.use(cookieParser());
+
+  app.use(
+    pino({
+      transport: {
+        target: 'pino-pretty',
+      },
+    }),
+  );
+
+  app.get('/', (req, res) => {
+    res.json({
+      message:
+        'Server is running! Check the /contacts endpoint and /contacts/:contactId for more information.',
+      status: 200,
     });
-  } catch (err) {
-    console.error(`Failed to launch application with error: ${err.message}`);
-    process.exit(1);
-  }
-};
+  });
 
-start();
+  app.use('/uploads', express.static(UPLOAD_DIR));
+  app.use(router);
+
+  app.use(notFoundHandler);
+
+  app.use(errorHandler);
+
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+};

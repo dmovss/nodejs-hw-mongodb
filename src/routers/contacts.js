@@ -1,30 +1,49 @@
-import express from 'express';
-import authenticate from '../middlewares/authenticate.js';
-import { isValidId } from '../middlewares/isValidId.js';
+import { Router } from 'express';
+
+import {
+  getContactsController,
+  getContactByIdController,
+  createContactController,
+  deleteContactController,
+  upsertContactController,
+  patchContactController,
+} from '../controllers/contacts.js';
+import { ctrlWrapper } from '../utils/ctrlWrapper.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import {
   createContactSchema,
   updateContactSchema,
-  updateFavoriteSchema,
-} from '../validation/contactSchemas.js';
-import {
-  getAllContacts,
-  getContactById,
-  addContact,
-  deleteContact,
-  updateContact,
-  updateStatusContact,
-} from '../controllers/contactsController.js';
+} from '../validation/contacts.js';
+import { isValidId } from '../middlewares/isValidId.js';
+import { authenticate } from '../middlewares/authenticate.js';
+import { upload } from '../middlewares/multer.js';
 
-const router = express.Router();
+const router = Router();
 
 router.use(authenticate);
 
-router.get('/', getAllContacts);
-router.get('/:id', isValidId, getContactById);
-router.post('/', validateBody(createContactSchema), addContact);
-router.delete('/:id', isValidId, deleteContact);
-router.put('/:id', isValidId, validateBody(updateContactSchema), updateContact);
-router.patch('/:id/favorite', isValidId, validateBody(updateFavoriteSchema), updateStatusContact);
+router.get('/', ctrlWrapper(getContactsController));
+router.get('/:contactId', isValidId, ctrlWrapper(getContactByIdController));
+router.post(
+  '/',
+  upload.single('photo'),
+  validateBody(createContactSchema),
+  ctrlWrapper(createContactController),
+);
+router.delete('/:contactId', isValidId, ctrlWrapper(deleteContactController));
+router.put(
+  '/:contactId',
+  isValidId,
+
+  validateBody(createContactSchema),
+  ctrlWrapper(upsertContactController),
+);
+router.patch(
+  '/:contactId',
+  isValidId,
+  upload.single('photo'),
+  validateBody(updateContactSchema),
+  ctrlWrapper(patchContactController),
+);
 
 export default router;

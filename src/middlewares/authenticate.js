@@ -1,48 +1,46 @@
-import jwt from 'jsonwebtoken';
 import createHttpError from 'http-errors';
-import Session from '../models/Session.js';
 
-const authenticate = async (req, res, next) => {
-  try {
-    const authHeader = req.get('Authorization');
-    if (!authHeader) {
-      return next(createHttpError(401, 'Authorization header is missing'));
-    }
+import { SessionsCollection } from '../db/models/session.js';
+import { UsersCollection } from '../db/models/user.js';
 
-    const [bearer, token] = authHeader.split(' ');
-    if (bearer !== 'Bearer' || !token) {
-      return next(createHttpError(401, 'Invalid authorization header format'));
-    }
+export const authenticate = async (req, res, next) => {
+  const authHeader = req.get('Authorization');
 
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        return next(createHttpError(401, 'Access token expired'));
-      }
-      return next(createHttpError(401, 'Invalid access token'));
-    }
-
-    const session = await Session.findOne({
-      accessToken: token,
-      accessTokenValidUntil: { $gt: new Date() },
-    }).populate('userId');
-
-    if (!session) {
-      return next(createHttpError(401, 'Invalid session'));
-    }
-
-    req.user = {
-      _id: session.userId._id,
-      name: session.userId.name,
-      email: session.userId.email,
-    };
-
-    next();
-  } catch (error) {
-    next(error);
+  if (!authHeader) {
+    next(createHttpError(401, 'Please provide Authorization header'));
+    return;
   }
-};
 
-export default authenticate;
+  const bearer = authHeader.split(' ')[0];
+  const token = authHeader.split(' ')[1];
+
+  if (bearer !== 'Bearer' || !token) {
+    next(createHttpError(401, 'Auth header should be of type Bearer'));
+    return;
+  }
+
+  const session = await SessionsCollection.findOne({ accessToken: token });
+
+  if (!session) {
+    next(createHttpError(401, 'Session not found'));
+    return;
+  }
+
+  const isAccessTokenExpired =
+    new Date() > new Date(session.accessTokenValidUntil);
+
+  if (isAccessTokenExpired) {
+    next(createHttpError(401, 'Access token expired'));
+  }
+
+  const user = await UsersCollection.findById(session.userId);
+
+  if (!user) {
+    next(createHttpError(401));
+    return;
+  }
+
+  req.user = user;
+
+  next();
+};
