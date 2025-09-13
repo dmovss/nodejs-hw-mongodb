@@ -11,7 +11,7 @@
   },
   "servers": [
     {
-      "url": "https://nodejs-hw-mongodb-106.onrender.com"
+      "url": "https://nodejs-hw-mongodb-106.onrender.com/"
     }
   ],
   "tags": [
